@@ -23,32 +23,18 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        getAvailableSymbol(symbols: symbols)
+        
         fromPicker.delegate = self
         fromPicker.dataSource = self
         toPicker.delegate = self
         toPicker.dataSource = self
-        
+        getAvailableSymbol()
     }
 
-//    func getAvailableSymbols() -> Promise <JSON> {
-//        return Promise<JSON> {
-//            seal -> Void in
-//            let url = symbolsURL + "?apikey=" + apiKey
-//
-//            AF.request(url).responseJSON { response in
-//                if response.error != nil {
-//                    seal.reject(response.error!)
-//                }
-//                seal.fulfill(response.data)
-//            }
-//        }
-//    }
     
-    func getAvailableSymbol(symbols : [String]) {
+    func getAvailableSymbol() {
         let url = symbolsURL + "?access_key=" + apiKey
-        var symbols:[String] = []
-        AF.request(url).responseJSON { response in
+        AF.request(url).responseJSON { [self] response in
             switch response.result {
             case .success(let value):
                 let responseSucceed = value as! [String:Any]
@@ -60,7 +46,9 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
                 }
                 if success != nil {
                     let symbolsDict = responseSucceed["symbols"] as! [String:String]
-                    symbols = Array(symbolsDict.keys)
+                    self.symbols = Array(symbolsDict.keys)
+                    self.fromPicker.reloadAllComponents()
+                    self.toPicker.reloadAllComponents()
                     print(symbols)
                 }
             case .failure(let error):
