@@ -13,6 +13,7 @@ import Alamofire
 class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
 
     let symbolsURL = "http://api.exchangeratesapi.io/v1/symbols"
+    let exchangeRateURL = "http://api.exchangeratesapi.io/v1/latest"
     let apiKey = "1a9032170ccf7939dc20b9f441a458e9"
     private var symbols = [String]()
     
@@ -32,6 +33,33 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     }
 
     
+    @IBAction func submitClicked(_ sender: UIButton) {
+        let from = fromPicker.selectedRow(inComponent: 0)
+        let to = toPicker.selectedRow(inComponent: 0)
+        let url = exchangeRateURL + "?access_key=" + apiKey
+            
+        let fullURL = url + "&base=" + symbols[from] + "&symbols=" + symbols[to]
+        print(fullURL)
+        AF.request(fullURL).responseJSON { [self] response in
+            switch response.result {
+            case .success(let value):
+                let responseSucceed = value as! [String:Any]
+                let error = responseSucceed["error"]
+                let success = responseSucceed["success"]
+                if error != nil {
+                    print(error)
+                    return
+                }
+                if success != nil {
+                    let rates = responseSucceed["rates"] as! [String:Any]
+                    let rate = Array(rates.values).first
+                    outLbl.text = String(format: "%f", rate as! Double)
+                }
+            case .failure(let error):
+                print(error)
+            }
+        }
+    }
     func getAvailableSymbol() {
         let url = symbolsURL + "?access_key=" + apiKey
         AF.request(url).responseJSON { [self] response in
@@ -54,7 +82,6 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
             case .failure(let error):
                 print(error)
             }
-            
         }
     }
 
@@ -69,6 +96,12 @@ class ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSo
     
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
         return symbols[row]
+    }
+    
+    func pickerView(pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+            // This method is triggered whenever the user makes a change to the picker selection.
+            // The parameter named row and component represents what was selected.
+        return
     }
 }
 
